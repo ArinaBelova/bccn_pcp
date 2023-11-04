@@ -1,8 +1,7 @@
 from enum import Enum
 import numpy as np
 import copy
-from collections import Counter
-import torch
+from typing import Callable, Optional
 
 BOARD_COLS = 7
 BOARD_ROWS = 6
@@ -56,7 +55,7 @@ def pretty_print_board(board: np.ndarray) -> str:
     board_format = lambda x: NO_PLAYER_PRINT if x == 0 else (PLAYER1_PRINT if x == 1 else PLAYER2_PRINT)
     output = ""
     output += "|==============|" + "\n"
-    for row in board:
+    for row in board[::-1]:
         output += "|"
         for el in row:
             output += board_format(el) + " "
@@ -96,6 +95,7 @@ def string_to_board(pp_board: str) -> np.ndarray:
 
 
 # Action function ?
+# Why saving the board: in mnimax it is useful to have the origina board
 def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPiece) -> np.ndarray:
     """
     Sets board[i, action] = player, where i is the lowest open row. Raises a ValueError
@@ -105,12 +105,13 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
     """
     # action is fucking chosen column
     board_copy = copy.deepcopy(board)
-    lowest_row = np.argwhere(board[:,action] == 0)
-    # We filled the column
+    lowest_row = np.argwhere(board[:,action] == NO_PLAYER)
+    # We filled the column, illegal move to put
+    # anything on top of it
     if not len(lowest_row):
         raise ValueError
 
-    lowest_row_position = lowest_row[-1]
+    lowest_row_position = lowest_row[0]
 
     board_copy[lowest_row_position, action] = player
 
@@ -167,4 +168,15 @@ def check_end_state(board: np.ndarray, player: BoardPiece) -> GameState:
     elif board.all():
         return GameState.IS_DRAW
     else:
-        return GameState.STILL_PLAYING         
+        return GameState.STILL_PLAYING
+
+
+class SavedState:
+    pass
+
+
+GenMove = Callable[
+    [np.ndarray, BoardPiece, Optional[SavedState]],  # Arguments for the generate_move function
+    tuple[PlayerAction, Optional[SavedState]]  # Return type of the generate_move function
+]
+

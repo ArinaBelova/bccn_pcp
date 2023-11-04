@@ -18,7 +18,7 @@ def test_pretty_board_string_match():
                          [0, 2, 1, 2, 2, 0, 0],
                          [0, 2, 2, 1, 1, 0, 0]])
 
-    our_out = pretty_print_board(board)
+    our_out = pretty_print_board(board[::-1])
     # Don't make fucking tabs for formatting as the test will fail
     str_to_compare = """|==============|
 |              |
@@ -40,7 +40,7 @@ def test_is_it_identity():
                          [0, 2, 1, 2, 2, 0, 0],
                          [0, 2, 2, 1, 1, 0, 0]])  
     
-    pp_board = pretty_print_board(board)
+    pp_board = pretty_print_board(board[::-1])
     back_to_array = string_to_board(pp_board)
 
     assert (board == back_to_array).all()
@@ -85,6 +85,9 @@ def test_make_four_diag_actions_and_win():
                         [0, 0, 0, 2, 2, 1, 0],
                         [0, 0, 0, 2, 1, 1, 1]])
 
+    # because we have a mess with pretty board                        
+    board = board[::-1]
+    
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING 
     assert check_end_state(board, PLAYER2) == GameState.STILL_PLAYING
 

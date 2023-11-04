@@ -11,4 +11,9 @@ Project: another algorithm
 Tournament
 
 
+30 Oct 2023: code for playing the game (algorithm)
+Minimax and MCTS
+
+
+
  
