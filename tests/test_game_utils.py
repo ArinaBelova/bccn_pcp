@@ -49,32 +49,32 @@ def test_is_it_identity():
 
 def test_make_four_row_actions_and_win():
     board = initialize_game_state()
-    board = apply_player_action(board, 0, PLAYER1)
+    apply_player_action(board, 0, PLAYER1)
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING
 
-    board = apply_player_action(board, 1, PLAYER1)
+    apply_player_action(board, 1, PLAYER1)
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING
 
-    board = apply_player_action(board, 2, PLAYER1)
+    apply_player_action(board, 2, PLAYER1)
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING
 
-    board = apply_player_action(board, 3, PLAYER1)
+    apply_player_action(board, 3, PLAYER1)
     assert check_end_state(board, PLAYER2) == GameState.STILL_PLAYING
     assert check_end_state(board, PLAYER1) == GameState.IS_WIN 
 
 
 def test_make_four_column_actions_and_win():
     board = initialize_game_state()
-    board = apply_player_action(board, 0, PLAYER1)
+    apply_player_action(board, 0, PLAYER1)
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING
 
-    board = apply_player_action(board, 0, PLAYER1)
+    apply_player_action(board, 0, PLAYER1)
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING
 
-    board = apply_player_action(board, 0, PLAYER1)
+    apply_player_action(board, 0, PLAYER1)
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING
 
-    board = apply_player_action(board, 0, PLAYER1)
+    apply_player_action(board, 0, PLAYER1)
     assert check_end_state(board, PLAYER2) == GameState.STILL_PLAYING
     assert check_end_state(board, PLAYER1) == GameState.IS_WIN 
 
@@ -93,7 +93,7 @@ def test_make_four_diag_actions_and_win():
     assert check_end_state(board, PLAYER1) == GameState.STILL_PLAYING 
     assert check_end_state(board, PLAYER2) == GameState.STILL_PLAYING
 
-    board = apply_player_action(board, 3, PLAYER1)
+    apply_player_action(board, 3, PLAYER1)
     assert check_end_state(board, PLAYER1) == GameState.IS_WIN 
 
 def test_draw_condition():
@@ -107,7 +107,7 @@ def test_draw_condition():
     assert check_end_state(board, PLAYER2) == GameState.IS_DRAW
     assert check_end_state(board, PLAYER1) == GameState.IS_DRAW
 
-def test_illegal_moves_are_not_allowed():
+def test_cannot_insert_anything_in_a_full_column():
     board = np.array([[0, 0, 0, 0, 0, 0, 1],
                         [0, 0, 0, 0, 0, 0, 1],
                         [0, 0, 0, 0, 0, 0, 1],
@@ -115,10 +115,7 @@ def test_illegal_moves_are_not_allowed():
                         [0, 0, 0, 0, 0, 0, 1],
                         [0, 0, 0, 0, 0, 0, 1]])
 
-    with pytest.raises(ValueError) as exc:
-        apply_player_action(board, 6, PLAYER1)
-
-    assert exc.type == ValueError  
+    assert check_move_status(board, 6) == MoveStatus.FULL_COLUMN  
   
 def test_get_valid_positions():
     board = np.array([[0, 0, 0],
