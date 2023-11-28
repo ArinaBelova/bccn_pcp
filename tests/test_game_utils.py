@@ -2,6 +2,8 @@ import numpy as np
 from agents.game_utils import *
 import pytest
 
+# Nice check if the test does nto compile: pytest --collect-only
+
 def test_initialize_game_state():
     ret = initialize_game_state()
 
@@ -118,4 +120,11 @@ def test_illegal_moves_are_not_allowed():
 
     assert exc.type == ValueError  
   
+def test_get_valid_positions():
+    board = np.array([[0, 0, 0],
+                        [2, 1, 0],
+                        [1, 1, 1]])
 
+    valid_pos = get_valid_positions(board)                                       
+                   
+    assert (valid_pos == np.array([0,1,2])).all()

@@ -170,6 +170,10 @@ def check_end_state(board: np.ndarray, player: BoardPiece) -> GameState:
     else:
         return GameState.STILL_PLAYING
 
+# for minimax impl, need the available columns on every step
+def get_valid_positions(board: np.ndarray) -> np.array:
+    empty_cells = np.argwhere(board == NO_PLAYER)
+    return np.unique(np.array([i[1] for i in empty_cells]))
 
 class SavedState:
     pass
