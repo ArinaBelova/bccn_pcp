@@ -103,19 +103,10 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
     board is returned and the original board should remain unchanged (i.e., either set
     back or copied beforehand).
     """
-    # action is fucking chosen column
-    board_copy = copy.deepcopy(board)
     lowest_row = np.argwhere(board[:,action] == NO_PLAYER)
-    # We filled the column, illegal move to put
-    # anything on top of it
-    if not len(lowest_row):
-        raise ValueError
-
     lowest_row_position = lowest_row[0]
 
-    board_copy[lowest_row_position, action] = player
-
-    return board_copy
+    board[lowest_row_position, action] = player
 
 
 def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
@@ -175,6 +166,15 @@ def get_valid_positions(board: np.ndarray) -> np.array:
     empty_cells = np.argwhere(board == NO_PLAYER)
     return np.unique(np.array([i[1] for i in empty_cells]))
 
+class MoveStatus(Enum):
+    IS_VALID = 1
+    WRONG_TYPE = 'Input is not a number.'
+    NOT_INTEGER = ('Input is not an integer, or isn\'t equal to an integer in '
+                   'value.')
+    OUT_OF_BOUNDS = 'Input is out of bounds.'
+    FULL_COLUMN = 'Selected column is full.'
+
+
 class SavedState:
     pass
 
@@ -184,3 +184,32 @@ GenMove = Callable[
     tuple[PlayerAction, Optional[SavedState]]  # Return type of the generate_move function
 ]
 
+
+def check_move_status(board: np.ndarray, column: int) -> MoveStatus:
+    """
+    Returns a MoveStatus indicating whether a move is legal or illegal, and why 
+    the move is illegal.
+    Any column type is accepted, but it needs to be convertible to a number
+    and must result in a whole number.
+    Furthermore, the column must be within the bounds of the board and the
+    column must not be full.
+    """
+    try:
+        numeric_column = float(column)
+    except ValueError:
+        return MoveStatus.WRONG_TYPE
+
+    is_integer = np.mod(numeric_column, 1) == 0
+    if not is_integer:
+        return MoveStatus.NOT_INTEGER
+
+    column = PlayerAction(column)
+    is_in_range = PlayerAction(0) <= column <= PlayerAction(6)
+    if not is_in_range:
+        return MoveStatus.OUT_OF_BOUNDS
+
+    is_open = board[-1, column] == NO_PLAYER
+    if not is_open:
+        return MoveStatus.FULL_COLUMN
+
+    return MoveStatus.IS_VALID

@@ -1,4 +1,4 @@
-from agents.game_utils import *
+from game_utils import *
 import numpy as np
 from typing import Optional, Tuple
 
@@ -57,49 +57,56 @@ def agent_move(board: np.ndarray, current_depth: int, target_depth: int, is_our_
     # cheap hack: 1 + 2 = 3 :)
     another_player = 3 - our_player
     
-    terminal = check_terminal_conditions(board, our_player, another_player, valid_pos, current_depth, target_depth)
+    terminal = check_terminal_conditions(board, our_player, another_player, valid_pos, \
+                                        current_depth, target_depth)
     if terminal[0]:
         return terminal[1], terminal[2]
  
     if is_our_player:
         value = -np.inf
-        # Just a placeholder
-        column = 0
+        # Just a placeholder for a running best columns we can put the stone into
+        best_position = 0
 
-        for col in valid_pos:
+        for pos in valid_pos:
+            copy_board = copy.deepcopy(board)
+
             # get the score for the action we play
-            mod_board = apply_player_action(board, col, our_player)
-            new_score = agent_move(mod_board, current_depth + 1, target_depth, False, another_player, alpha, beta)[1]
+            apply_player_action(copy_board, pos, our_player)
+            new_score = agent_move(copy_board, current_depth + 1, target_depth, False, \
+                                 another_player, alpha, beta)[1]
             
             if new_score > value:
                 value = new_score
-                column = col
+                best_position = pos
             
             alpha = max(alpha, value)
             if alpha >= beta:
                 break
 
-        return column, value
+        return best_position, value
 
     else:
         value = np.inf
-        # Just a placeholder
-        column = 0
+        # Just a placeholder for a running best columns we can put the stone into
+        best_position = 0
 
-        for col in valid_pos:
+        for pos in valid_pos:
+            copy_board = copy.deepcopy(board)
+
             # get the score for the action we play
-            mod_board = apply_player_action(board, col, another_player)
-            new_score = agent_move(mod_board, current_depth + 1, target_depth, True, our_player, alpha, beta)[1]
+            apply_player_action(copy_board, pos, another_player)
+            new_score = agent_move(copy_board, current_depth + 1, target_depth, True, \
+                                 our_player, alpha, beta)[1]
             
             if new_score < value:
                 value = new_score
-                column = col
+                best_position = pos
 
             beta = min(beta, value)
             if alpha >= beta:
                 break
 
-        return column, value
+        return best_position, value
 
 
 def minimax_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[PlayerAction, Optional[SavedState]]:

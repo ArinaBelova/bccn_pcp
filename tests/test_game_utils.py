@@ -1,5 +1,5 @@
 import numpy as np
-from agents.game_utils import *
+from game_utils import *
 import pytest
 
 # Nice check if the test does nto compile: pytest --collect-only

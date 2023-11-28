@@ -1,4 +1,4 @@
-from agents.game_utils import BoardPiece, PlayerAction, SavedState, NO_PLAYER, apply_player_action
+from game_utils import BoardPiece, PlayerAction, SavedState, NO_PLAYER, apply_player_action
 import numpy as np
 from typing import Tuple, Optional
 

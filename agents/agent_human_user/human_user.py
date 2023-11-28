@@ -1,6 +1,6 @@
 import numpy as np
 
-from agents.game_utils import BoardPiece, PlayerAction, SavedState, NO_PLAYER
+from game_utils import BoardPiece, PlayerAction, SavedState, NO_PLAYER
 from typing import Optional, Callable
 
 
@@ -37,12 +37,7 @@ def handle_illegal_moves(board: np.ndarray, column: PlayerAction):
     if not is_in_range:
         raise IndexError
 
-    # TODO: it always checks the first row of the board 
-    # -- always return an error when trying to fill
-    # the second row
     is_open = board[-1, column] == NO_PLAYER
-    print(f"Element in the last row: {board[-1, column]}")
-    print(0 == NO_PLAYER)
     if not is_open:
         raise ValueError
 

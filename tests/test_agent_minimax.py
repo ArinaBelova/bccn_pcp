@@ -1,6 +1,6 @@
 import numpy as np
 from agents.agent_minimax.minimax_agent import *
-from agents.game_utils import *
+from game_utils import *
     
 
 def test_agent_move_maximizing():
