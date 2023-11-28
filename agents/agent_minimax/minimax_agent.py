@@ -12,13 +12,19 @@ def check_terminal_conditions(board: np.ndarray, our_player: BoardPiece, another
     2. whether it is a draw (in which case there are no more valid moves to play)
     3. whether we reached a target_depth of a search tree 
 
-    Parameters:
-    board (np.ndarray): The game board.
-    our_player (BoardPiece): The player who is currently making a move.
-    saved_state (Optional[SavedState]): The saved state of the game.
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+    our_player : BoardPiece
+        The player who is currently making a move.
+    saved_state : Optional[SavedState]
+        The saved state of the game.
 
-    Returns:
-    Tuple[PlayerAction, Optional[SavedState]]: The optimal action for the player and the saved state.
+    Returns
+    ----------
+    Tuple[PlayerAction, Optional[SavedState]]
+        The optimal action for the player and the saved state.
     """
     
     # won
@@ -40,17 +46,27 @@ def agent_move(board: np.ndarray, current_depth: int, target_depth: int, is_our_
     """
     The function recursively computes the optimal move and its associated score using the Minimax algorithm with alpha-beta pruning.
 
-    Parameters:
-    - board (np.ndarray): The current game board.
-    - current_depth (int): The current depth in the search tree.
-    - target_depth (int): The target depth for the search tree.
-    - is_our_player (bool): Flag indicating if the current player is our player.
-    - our_player (BoardPiece): The player for whom the move is being considered.
-    - alpha (float): The alpha value for alpha-beta pruning.
-    - beta (float): The beta value for alpha-beta pruning.
+    Parameters
+    ----------
+    board : np.ndarray
+        The current game board.
+    current_depth : int
+        The current depth in the search tree.
+    target_depth : int
+        The target depth for the search tree.
+    is_our_player : bool
+        Flag indicating if the current player is our player.
+    our_player : BoardPiece
+        The player for whom the move is being considered.
+    alpha : float
+        The alpha value for alpha-beta pruning.
+    beta : float
+        The beta value for alpha-beta pruning.
 
-    Returns:
-    Tuple[PlayerAction, int]: The recommended move and its associated score.
+    Returns
+    ----------
+    Tuple[PlayerAction, int]
+        The recommended move and its associated score.
     """
     
     valid_pos = get_valid_positions(board)
@@ -117,13 +133,19 @@ def minimax_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[Sa
     The function uses the minimax algorithm with alpha-beta peuning to explore the game tree up to a certain depth and evaluate the game states. 
     It returns the optimal move for the player and saved state.
 
-    Parameters:
-    board (np.ndarray): The game board.
-    player (BoardPiece): The player who is currently making a move.
-    saved_state (Optional[SavedState]): The saved state of the game.
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+    player : BoardPiece
+        The player who is currently making a move.
+    saved_state : Optional[SavedState]
+        The saved state of the game.
 
-    Returns:
-    Tuple[PlayerAction, Optional[SavedState]]: The optimal action for the player and the saved state.
+    Returns
+    ----------
+    Tuple[PlayerAction, Optional[SavedState]]
+        The optimal action for the player and the saved state.
     """
     current_depth = 0
     target_depth = 4
