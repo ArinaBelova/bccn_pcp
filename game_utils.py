@@ -31,6 +31,14 @@ class GameState(Enum):
 def initialize_game_state() -> np.ndarray:
     """
     Returns an ndarray, shape BOARD_SHAPE and data type (dtype) BoardPiece, initialized to 0 (NO_PLAYER).
+    
+    Parameters
+    ----------
+
+    Returns
+    ----------
+    np.ndarray
+        The game board.
     """
     return np.full(shape=BOARD_SHAPE, fill_value=NO_PLAYER, dtype=BoardPiece)
 
@@ -50,6 +58,16 @@ def pretty_print_board(board: np.ndarray) -> str:
     |  O O X X     |
     |==============|
     |0 1 2 3 4 5 6 |
+
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+    
+    Returns
+    ----------
+    str
+        The string representation of the board.
     """
 
     board_format = lambda x: NO_PLAYER_PRINT if x == 0 else (PLAYER1_PRINT if x == 1 else PLAYER2_PRINT)
@@ -71,6 +89,16 @@ def string_to_board(pp_board: str) -> np.ndarray:
     Takes the output of pretty_print_board and turns it back into an ndarray.
     This is quite useful for debugging, when the agent crashed and you have the last
     board state as a string.
+
+    Parameters
+    ----------
+    pp_board : str
+        The string representation of the game board.
+    
+    Returns
+    ----------
+    np.ndarray
+        The game board.
     """
     what_to_remove = lambda x: 0 if ((x == "|") or (x == "=") or x.isdigit()) else 1
     upd = ''.join(i for i in pp_board if what_to_remove(i)) 
@@ -96,12 +124,24 @@ def string_to_board(pp_board: str) -> np.ndarray:
 
 # Action function ?
 # Why saving the board: in mnimax it is useful to have the origina board
-def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPiece) -> np.ndarray:
+def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPiece):
     """
     Sets board[i, action] = player, where i is the lowest open row. Raises a ValueError
     if action is not a legal move. If it is a legal move, the modified version of the
     board is returned and the original board should remain unchanged (i.e., either set
     back or copied beforehand).
+
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+    action: PlayerAction
+        The action chosen by the player.
+    player : BoardPiece
+        The player who is currently making a move.
+
+    Returns
+    ----------
     """
     lowest_row = np.argwhere(board[:,action] == NO_PLAYER)
     lowest_row_position = lowest_row[0]
@@ -113,6 +153,18 @@ def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
     """
     Returns True if there are four adjacent pieces equal to `player` arranged
     in either a horizontal, vertical, or diagonal line. Returns False otherwise.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+    player : BoardPiece
+        The player who is currently making a move.
+
+    Returns
+    ----------
+    bool
+        Check whether we have connect 4 or not.
     """
     # For rows
     for row in range(0, BOARD_ROWS):
@@ -150,6 +202,18 @@ def check_end_state(board: np.ndarray, player: BoardPiece) -> GameState:
     Returns the current game state for the current `player`, i.e. has their last
     action won (GameState.IS_WIN) or drawn (GameState.IS_DRAW) the game,
     or is play still on-going (GameState.STILL_PLAYING)?
+
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+    player : BoardPiece
+        The player who is currently making a move.
+
+    Returns
+    ----------
+    GameState
+        The state of the game at a given time step.
     """
     if connected_four(board, player):
         return GameState.IS_WIN
@@ -161,8 +225,23 @@ def check_end_state(board: np.ndarray, player: BoardPiece) -> GameState:
 
 # for minimax impl, need the available columns on every step
 def get_valid_positions(board: np.ndarray) -> np.array:
+    """
+    Checks the available positions/columns on the board to put the next piece into.
+
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+   
+    Returns
+    ----------
+    np.array
+        The available positions on the board to put the next piece into.
+    """
+    
     empty_cells = np.argwhere(board == NO_PLAYER)
     return np.unique(np.array([i[1] for i in empty_cells]))
+
 
 class MoveStatus(Enum):
     IS_VALID = 1
@@ -191,6 +270,18 @@ def check_move_status(board: np.ndarray, column: int) -> MoveStatus:
     and must result in a whole number.
     Furthermore, the column must be within the bounds of the board and the
     column must not be full.
+
+    Parameters
+    ----------
+    board : np.ndarray
+        The game board.
+    column: int
+        The action.
+
+    Returns
+    ----------
+    MoveStatus
+        The move status of the given action.
     """
     try:
         numeric_column = float(column)
