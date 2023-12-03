@@ -107,21 +107,19 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
     lowest_row_position = lowest_row[0]
 
     board[lowest_row_position, action] = player
-
+    
 
 def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
     """
     Returns True if there are four adjacent pieces equal to `player` arranged
     in either a horizontal, vertical, or diagonal line. Returns False otherwise.
     """
-    win_status = False
-
     # For rows
     for row in range(0, BOARD_ROWS):
-        for column in range(3, BOARD_COLS):
+        for column in range(3, BOARD_COLS):  
             if (board[row][column] == board[row][column - 1] ==\
                 board[row][column - 2] == board[row][column - 3] == player):
-                    win_status = True
+                    return True
             else:
                 continue   
 
@@ -130,7 +128,7 @@ def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
         for row in range(3, BOARD_ROWS):
             if (board[row][column] == board[row - 1][column] ==\
                 board[row - 2][column] == board[row - 3][column] == player):
-                    win_status = True
+                    return True
             else:
                 continue
 
@@ -141,11 +139,11 @@ def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
                 board[row + 2][column + 2] == board[row + 3][column + 3] == player) or
                 (board[row + 3][column] == board[row + 2][column + 1] ==\
                 board[row + 1][column + 2] == board[row][column + 3] == player)):
-                    win_status = True
+                    return True
             else:
                 continue
 
-    return win_status            
+    return False            
 
 def check_end_state(board: np.ndarray, player: BoardPiece) -> GameState:
     """
