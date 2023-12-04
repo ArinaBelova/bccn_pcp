@@ -29,11 +29,11 @@ def check_terminal_conditions(board: np.ndarray, our_player: BoardPiece, another
     
     # won
     if check_end_state(board, our_player) == GameState.IS_WIN:
-        return (True, None, 10000)
+        return (True, None, np.inf)
 
     # lost
     if check_end_state(board, another_player) == GameState.IS_WIN:
-        return (True, None, -10000)  
+        return (True, None, -np.inf)  
 
     # No more valid moves to take and we didn't win/loose the game
     if (len(valid_pos) == 0) or (current_depth == target_depth):
@@ -42,7 +42,23 @@ def check_terminal_conditions(board: np.ndarray, our_player: BoardPiece, another
     return (False, None, None)       
 
 
-def agent_move(board: np.ndarray, current_depth: int, target_depth: int, is_our_player: bool, our_player: BoardPiece, alpha: float, beta: float) -> Tuple[PlayerAction, int]:
+def update_alpha_value(alpha, beta, score):
+    alpha = max(alpha, score)
+    if alpha >= beta:
+        return True
+    else:
+        return False   
+
+
+def update_beta_value(alpha, beta, score):
+    beta = min(beta, score)
+    if alpha >= beta:
+        return True
+    else:
+        return False 
+
+
+def agent_move(board: np.ndarray, current_depth: int, target_depth: int, is_our_player: bool, player: BoardPiece, alpha: float, beta: float) -> Tuple[PlayerAction, int]:
     """
     The function recursively computes the optimal move and its associated score using the Minimax algorithm with alpha-beta pruning.
 
@@ -94,8 +110,7 @@ def agent_move(board: np.ndarray, current_depth: int, target_depth: int, is_our_
                 score = new_score
                 best_position = pos
             
-            alpha = max(alpha, score)
-            if alpha >= beta:
+            if update_alpha_value(alpha, beta, score):
                 break
 
         return best_position, score
@@ -117,8 +132,7 @@ def agent_move(board: np.ndarray, current_depth: int, target_depth: int, is_our_
                 score = new_score
                 best_position = pos
 
-            beta = min(beta, score)
-            if alpha >= beta:
+            if update_beta_value(alpha, beta, score):
                 break
 
         return best_position, score
