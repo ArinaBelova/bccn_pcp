@@ -1,0 +1,9 @@
+training_config:
+  learning_rate: 0.001
+  exp_replay: true
+  eval_steps: 30
+  evaluate_at: 1000
+  num_episodes: 10
+  debug: false
+  num_update_steps: 1000
+  gamma: 0.99
