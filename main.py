@@ -8,6 +8,7 @@ from agents.agent_human_user import user_move
 from agents.agent_random import generate_move
 from agents.agent_minimax import minimax_move
 from agents.agent_dqn import dqn_move
+from agents.agent_mcts_nn import mcts_move
 
 
 def human_vs_agent(
@@ -74,4 +75,4 @@ def human_vs_agent(
 
 
 if __name__ == "__main__":
-    human_vs_agent(dqn_move)
+    human_vs_agent(mcts_move)
