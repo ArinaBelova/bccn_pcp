@@ -225,7 +225,7 @@ def nn_training_loop(model, dataloader, optimizer, device, is_training):
 
 
 
-def UCT(rootstate, player, mlp, num_iterations, verbose = False):
+def UCT(rootstate, player, num_iterations, verbose = False):
     """ Conduct a UCT search for itermax iterations starting from rootstate.
         Return the best move from the rootstate.
         Assumes 2 alternating players (player 1 starts), with game results in ther ange [0.0, 1.0]."""
