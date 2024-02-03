@@ -32,6 +32,17 @@ class Node:
             lambda c: c.wins/c.visits + UCTK * sqrt(2*log(self.visits)/c.visits to vary the amount of
             exploration versus exploitation.
         """
+        # best_child = None
+        # best_score = -float("inf")
+        # for child in self.childNodes:
+        #     exploit = child.wins / child.visits
+        #     explore = sqrt(log(self.visits) / child.visits)
+        #     score = exploit + c * explore
+        #     if score > best_score:
+        #         best_child = child
+        #         best_score = score
+        # return best_child
+
         s = sorted(self.childNodes, key = lambda node: node.wins/node.visits + c * sqrt(log(node.parentNode.visits)/node.visits))[-1]
         return s
     
@@ -39,6 +50,8 @@ class Node:
         """ Remove move from untriedMoves and add a new child node for this move.
             Return the added child node
         """
+        #print(self.board_state)
+        #print(self.playerJustMoved)
         apply_player_action(board = self.board_state, action = move, player = self.playerJustMoved)
         # TODO: Need to change the player here otherwise only one player keeps acting ????
         new_node = Node(board_state = self.board_state.copy(), player = 3 - self.playerJustMoved, move = move, parent = self)
@@ -68,6 +81,27 @@ class Node:
         Tuple[PlayerAction, Optional[SavedState]]
             The optimal action for the player and the saved state.
         """
+
+        # TODO: the results can be a player (?)
+        # compare the result player to the node player in backprop and if it is true -> do update()
+        # add 1 -> win, -1 loss and 0 for a draw
+        
+        # Previous code:
+        # won
+        # if check_end_state(board, our_player) == GameState.IS_WIN:
+        #     return 1 #np.inf
+
+        # # lost
+        # if check_end_state(board, 3 - our_player) == GameState.IS_WIN:
+        #     return -1 #-np.inf 
+
+        # # No more valid moves to take and we didn't win/loose the game
+        # if check_end_state(board, our_player) == GameState.IS_DRAW or check_end_state(board, 3 - our_player) == GameState.IS_DRAW:
+        #     return 0 
+
+        # return 0
+
+
         if winning_player == 0:
             return 0
 
@@ -109,6 +143,10 @@ class Node:
         return s
 
 
+    
+
+
+
 def node_selection():
     pass
 
@@ -143,6 +181,7 @@ class MLP(nn.Module):
         input = torch.Tensor(input)
 
         input = F.relu(self.fc1(input))
+        #input = F.relu(self.fc2(input))
         input = self.fc2(input)
 
         # Make policy vector a vector of probabilities
@@ -194,6 +233,8 @@ class MLP(nn.Module):
 #     # Return the average loss for this epoch
 #     return epoch_loss / (batch_id + 1)    
         # other_player = player
+#global our_player
+#our_player = None
 
 
 def UCT(rootstate, player, saved_state, num_iterations, verbose = False):
@@ -203,6 +244,8 @@ def UCT(rootstate, player, saved_state, num_iterations, verbose = False):
 
     # TODO: playing from the current player
     rootnode = Node(board_state = rootstate, player = player, move = None, parent = None)
+
+    c = 0
 
     network = MLP(len(rootstate.flatten()), 7)
     # TODO: all the methods should act on the nodes and not boards/players
@@ -214,9 +257,14 @@ def UCT(rootstate, player, saved_state, num_iterations, verbose = False):
 
         # Select
         while (not len(node.untriedMoves)) and len(node.childNodes): # node is fully expanded and non-terminal
-            # Need to go through the nodes that we have after expand step 
             node = node.UCT_select_child()
+            # print("WE ARE IN SELECTION PHASE")
+            # print(node.move)
+            # print("\n")
 
+            # Need to go through the nodes thaat we have 
+            # No need to apply the action again
+            # apply_player_action(board = board_state, action = node.move, player = player)
 
         # Expand - until we hit a leaf node
         if len(node.untriedMoves): # if we can expand (i.e. board_state/node is non-terminal)
@@ -245,31 +293,62 @@ def UCT(rootstate, player, saved_state, num_iterations, verbose = False):
         # value, policy = nn(board_state.flatten())
         # apply_player_action(board = board_state, action = np.argmax(policy), player = other_player) 
 
-        
-        # Rollout: start with a particular node and particular player, last node that we are at
-        # Doing these copies as we don't want to screw the boards of the nodes
         copy_board = node.board_state.copy()
+        # Rollout: start with a particular node and particular player, last node that we are at
         sim_player = node.playerJustMoved
         while len(get_valid_positions(copy_board)): # while board_state is non-terminal
+            # print("I am in rollout")
             # TODO: Instead of a random do a most probable action from a policy vector from NN?
             
+            # Tried to be "clever" and use for Rollout a move generated by minimax, didn't work
+            # copy_board_state = board_state.copy()
+            # clever_move, _ = minimax_move(copy_board_state, other_player, saved_state)
+            # print("MINIMAX MOVE")
+            # print(clever_move)
+            # print("\n")
+            # apply_player_action(board = board_state, action = clever_move, player = other_player)
             winning_player = 0
+
             if connected_four(copy_board, sim_player):
                 winning_player = sim_player 
+                #print("WIN P Node's player: ",winning_player)
+                #print("CONNECTED 4, LEAVING THE LOOP")
                 break
 
             if connected_four(copy_board, 3 - sim_player):
                 winning_player = 3 - sim_player
+                #print("WIN P Opposing player: ",winning_player)
+                #print("CONNECTED 4, LEAVING THE LOOP")
                 break
+            # print("WIN P: ",winning_player)
             
-            # Still need to have it to change the board, check the reference to the player
+            
+            # Still need to have it t ochange the board, check the reference to the player
             apply_player_action(board = copy_board, action = random.choice(get_valid_positions(copy_board)), player = sim_player)
             sim_player = 3 - sim_player
-
-            # TODO: There may be a case that there is no connect 4      
+            #print(pretty_print_board(copy_board))
+            # There may be a case that there is no connect 4
+            
             # TODO: check for connect 3 and connect 2 to update heruistics
             # TODO: check if there is a win or not, it may be multiple connect4 here in the current state of the code
             # break out of the loop, other player is a winner
+            
+            # winning_player = 0
+            # if connected_four(copy_board, sim_player):
+            #     winning_player = sim_player 
+            #     #print("WIN P Node's player: ",winning_player)
+            #     print("CONNECTED 4, LEAVING THE LOOP")
+            #     break
+
+            # if connected_four(copy_board, 3 - sim_player):
+            #     winning_player = 3 - sim_player
+            #     #print("WIN P Opposing player: ",winning_player)
+            #     print("CONNECTED 4, LEAVING THE LOOP")
+            #     break
+            # # print("WIN P: ",winning_player)
+            # sim_player = 3 - sim_player
+            
+
 
         # Backpropagate from the expanded node and work back to the root node
         while node is not None: 
@@ -283,6 +362,8 @@ def UCT(rootstate, player, saved_state, num_iterations, verbose = False):
             node = node.parentNode
 
 
+
+    print(f"COUTN IS {c}")
     # Output some information about the tree - can be omitted
     if (verbose): 
         print(rootnode.tree_to_string(0))
@@ -293,4 +374,4 @@ def UCT(rootstate, player, saved_state, num_iterations, verbose = False):
     return sorted(rootnode.childNodes, key = lambda node: node.visits)[-1].move # node.wins / node.visits
 
 def mcts_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]):
-    return UCT(rootstate = board, player = player, saved_state = saved_state, num_iterations = 5000, verbose = False), saved_state
+    return UCT(rootstate = board, player = player, saved_state = saved_state, num_iterations = 1000, verbose = False), saved_state
