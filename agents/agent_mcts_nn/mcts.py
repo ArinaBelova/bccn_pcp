@@ -85,7 +85,7 @@ class Node:
             return -1    
 
 
-    def get_result_nn(self, value_prediction):
+    def give_results_nn(self, value_prediction):
         """
         Calculate the rollout result based on the predicted value from the neural network.
 
@@ -229,7 +229,6 @@ def UCT(rootstate, player, num_iterations, verbose = False):
     """ Conduct a UCT search for itermax iterations starting from rootstate.
         Return the best move from the rootstate.
         Assumes 2 alternating players (player 1 starts), with game results in ther ange [0.0, 1.0]."""
-
     # TODO: playing from the current player
     rootnode = Node(board_state = rootstate, player = player, move = None, parent = None)
 
@@ -240,12 +239,14 @@ def UCT(rootstate, player, num_iterations, verbose = False):
         # board_state = rootstate.copy()
         our_player = player
 
+        print("starting selection")
         # Select
         while (not len(node.untriedMoves)) and len(node.childNodes): # node is fully expanded and non-terminal
             # Need to go through the nodes that we have after expand step 
             node = node.UCT_select_child()
+        print("ended selection")
 
-
+        print("started expansion")
         # Expand - until we hit a leaf node
         if len(node.untriedMoves): # if we can expand (i.e. board_state/node is non-terminal)
             # apply move which is argmax of policy of NN 
@@ -268,19 +269,25 @@ def UCT(rootstate, player, num_iterations, verbose = False):
             # Apply player action on the level of the node, only need to know the move to make!
             node = node.add_child(move) # add child and descend the tree
 
+        print("finised expansion")
         # Rollout would no longer existis with a neural network, we choose the best value based on NN pred
         # value is self.visits/self.wins 
         # value, policy = nn(board_state.flatten())
         # apply_player_action(board = board_state, action = np.argmax(policy), player = other_player) 
 
-        
+        print("starting rollut")
         # Rollout: start with a particular node and particular player, last node that we are at
         # Doing these copies as we don't want to screw the boards of the nodes
         copy_board = node.board_state.copy()
         sim_player = node.playerJustMoved
+
+        # TODO: instead of rollout we have value estimation 
+
+        # TODO: Instead of a random do a most probable action from a policy vector from NN?
+        # in backprop propagate this value back to the root
         while len(get_valid_positions(copy_board)): # while board_state is non-terminal
-            # TODO: Instead of a random do a most probable action from a policy vector from NN?
             
+
             winning_player = 0
             if connected_four(copy_board, sim_player):
                 winning_player = sim_player 
@@ -293,36 +300,41 @@ def UCT(rootstate, player, num_iterations, verbose = False):
             policy_vector, _ = mlp(copy_board.flatten())
             move = torch.argmax(policy_vector).item()
 
+            # TODO: does this makes sense to continue the loop even if it may not be the responibility of this function?
+            if not move in get_valid_positions(copy_board):
+                break
+
             # Still need to have it to change the board, check the reference to the player
-            # random.choice(get_valid_positions(copy_board))
+            # previously: random.choice(get_valid_positions(copy_board))
             apply_player_action(board = copy_board, action = move, player = sim_player)
             sim_player = 3 - sim_player
 
+        print("finished rollout")
             # TODO: There may be a case that there is no connect 4      
             # TODO: check for connect 3 and connect 2 to update heruistics
             # TODO: check if there is a win or not, it may be multiple connect4 here in the current state of the code
             # break out of the loop, other player is a winner
-
+        print("started backprop")
         # Backpropagate from the expanded node and work back to the root node
         while node is not None: 
-            # results are given the the NN value not this handmade policy
-            # TODO: HOW THE FUCK TO DO THIS???
-            #result = node.give_results(winning_player = winning_player, our_player=our_player) 
+            # results now are given the the NN value not this handmade policy
+            # result = node.give_results(winning_player = winning_player, our_player=our_player) 
             
             _, value_prediction = mlp(node.board_state.flatten())
-            result = node.give_results_nn(node.board_state, value_prediction)
+            result = node.give_results_nn(value_prediction)
 
             # result = value # from NN
             node.update(result = result)
             node = node.parentNode # TODO: that's how it was previously! 
 
-
+    print("finished backprop")
     # Output some information about the tree - can be omitted
     if (verbose): 
         print(rootnode.tree_to_string(0))
     else: 
         print(rootnode.children_to_string())
 
+    print(rootnode.childNodes)
     # return the move that was most visited
     return sorted(rootnode.childNodes, key = lambda node: node.visits)[-1].move # node.wins / node.visits
 
@@ -331,7 +343,7 @@ def mcts_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[Saved
     # SOmehow gve it a trained newotk -> load here saved weights from outside
     # Don't change the network while playing with human opponent, all the trianing is not the responsbilty of this funciton
 
-    return UCT(rootstate = board, player = player, mlp = mlp, saved_state = saved_state, num_iterations = 5000, verbose = False), saved_state
+    return UCT(rootstate = board, player = player, mlp = mlp, saved_state = saved_state, num_iterations = 1000, verbose = False), saved_state
 
 
 
@@ -341,15 +353,21 @@ def mcts_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[Saved
 def generate_training_data(mcts_iterations, mlp, player):
     training_data = []
 
-    initial_state = np.zeros((7, 6))  # Example initial game state
+    initial_state = np.zeros((6, 7))  # Example initial game state
     root_state = initial_state.copy()
+
+    current_count = 0
     for _ in range(mcts_iterations):
+        print(f"Current datapoint # is {current_count}")
         # Simulate one MCTS iteration starting from the initial state
         selected_move = UCT(root_state, player, mcts_iterations, mlp)
 
+        print(selected_move)
         # TODO: problem with board overload
         # if selected-move is not in get_valid_valid_moves()
         # break the loop and re-init the root_state
+        if not selected_move in get_valid_positions(root_state):
+            continue
 
         # Apply the selected move to update the board
         apply_player_action(board=root_state, action=selected_move, player=player)
@@ -361,6 +379,8 @@ def generate_training_data(mcts_iterations, mlp, player):
 
         # Generate training example
         training_data.append((root_state.flatten(), policy_vector, value_prediction))
+
+        current_count += 1
 
     return training_data
 
@@ -401,7 +421,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(mlp.parameters(), lr=0.001)
 
     # Example MCTS and training parameters
-    mcts_iterations = 1000
+    mcts_iterations = 10
     num_epochs = 100
     batch_size = 8 # 32
 
@@ -409,6 +429,9 @@ if __name__ == "__main__":
     # TODO: how do we cater for different players? 
     training_data = generate_training_data(mcts_iterations, mlp, player=1)
 
+    print("Generated the training data!")
+
+    print("Starting training the neural network!")
     # Train the neural network
     train_neural_network(mlp, optimizer, training_data, num_epochs, batch_size)
 
