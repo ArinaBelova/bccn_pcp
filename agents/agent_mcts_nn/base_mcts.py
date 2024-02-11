@@ -31,11 +31,11 @@ class Node:
         def UCT_value(node):
             if node.visits == 0:
                 return float('inf') 
+                #return 1
             else:
                 return (node.wins / node.visits) + c * sqrt(log(node.parentNode.visits / node.visits)) + 1e-6
 
         s = sorted(self.childNodes, key = lambda node: UCT_value(node))[-1]
-        # print("VALUE UCT: ",UCT_value(s))
         return s
 
     def add_child(self, child, move):
@@ -95,12 +95,8 @@ def give_results(winning_player: BoardPiece, our_player: BoardPiece) -> int:
     if winning_player == our_player:
         return 1
 
-    elif winning_player == 3 - our_player:
+    elif winning_player == (3 - our_player):
         return -1 
-
-
-def switch_player(player):
-    return 3 - player
 
 
 def UCT(rootstate, player, saved_state, num_iterations):
@@ -109,15 +105,16 @@ def UCT(rootstate, player, saved_state, num_iterations):
     node = rootstate
 
     # do a first step of expansion from root here
-
-    for move in rootstate.untriedMoves:
-        parent_board_copy = deepcopy(rootstate.board_state)
+    for move in node.untriedMoves:
+        parent_board_copy = deepcopy(node.board_state)
         apply_player_action(parent_board_copy, move, player)
-        child = Node(parent_board_copy, switch_player(rootstate.player), move, rootstate)
+        child = Node(parent_board_copy, switch_player(node.player), move, node)
         #print(parent_board_copy)
-        rootstate.add_child(child, move)
+        node.add_child(child, move)
 
-    for _ in range(num_iterations):
+    #print([i.move for i in rootstate.childNodes])    
+
+    for iter in range(num_iterations):
         node = rootstate
     
         # we want to start with something thus we check the moves from current board state  
@@ -127,7 +124,7 @@ def UCT(rootstate, player, saved_state, num_iterations):
             # print(len(node.childNodes))
             # print(node.parentNode)
             node = node.UCT_select_child()
-            print(f"The best move is {node.move}")
+            # print(f"The best move is {node.move}")
 
         #print("Expansion")
         # expansion criterion -> go to expansion before selecting the next moves 
@@ -147,11 +144,11 @@ def UCT(rootstate, player, saved_state, num_iterations):
         current_player = node.player # switch_player(node.player)
         current_board_copy = deepcopy(node.board_state)
         while check_end_state(current_board_copy, current_player) is GameState.STILL_PLAYING:
-            # current_player = switch_player(current_player)
+            #current_player = switch_player(current_player)
             move = random.choice(get_valid_positions(current_board_copy))
             apply_player_action(current_board_copy, move, current_player)
             current_player = switch_player(current_player)
-
+#
         # check what end state we have and for which player
         reward = give_results(current_player, node.player)     
 
@@ -164,15 +161,21 @@ def UCT(rootstate, player, saved_state, num_iterations):
             reward = reward * (-1) # change reward as we will change the prespective player-wise
             node = node.parentNode
 
-        # print([node.visits for node in rootstate.childNodes])
+    # print(rootstate.childNodes)
+    # print([node.wins / node.visits for node in rootstate.childNodes])
+    # print(sorted(rootstate.childNodes, key = lambda node: node.wins / node.visits)[-1].move)
+    # #print(sorted(rootstate.childNodes, key = lambda node: node.wins / node.visits)[0].move)
+    # print([i.move for i in sorted(rootstate.childNodes, key = lambda node: node.wins / node.visits)])
+        # print(f"Iteration # {iter} \n")
+        #print(rootstate.tree_to_string(0))
 
-    # print(rootstate.tree_to_string(0))
+    return sorted(rootstate.childNodes, key = lambda node: node.wins / node.visits)[-1].move, rootstate
 
-    return sorted(rootstate.childNodes, key = lambda node: node.wins)[-1].move  # node.wins / node.visits
-
-def mcts_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]):
+def mcts_basic_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]):
     # TODO: where to create a network so it will train and will not be re-intiialised every time?
     # SOmehow gve it a trained newotk -> load here saved weights from outside
     # Don't change the network while playing with human opponent, all the trianing is not the responsbilty of this funciton
-    return UCT(rootstate = board, player = player, saved_state = saved_state, num_iterations = 3), saved_state
+
+    out, _ = UCT(rootstate = board, player = player, saved_state = saved_state, num_iterations = 1000)
+    return out, saved_state
 

@@ -248,9 +248,12 @@ def get_valid_positions(board: np.ndarray) -> np.array:
 def vectorise_possible_moves(valid_positions: np.array) -> np.array:
     out = np.zeros(7, dtype=int)
     out = [1 if ind in valid_positions else 0 for ind, _ in enumerate(out)]
+    out = np.array(out, dtype=np.float32)
 
     return out
 
+def switch_player(player: BoardPiece) -> BoardPiece:
+    return 3 - player
 
 class MoveStatus(Enum):
     IS_VALID = 1
