@@ -169,6 +169,9 @@ def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
     # For rows
     for row in range(0, BOARD_ROWS):
         for column in range(3, BOARD_COLS):  
+            # print(f"ROW IS {row}")
+            # print(f"COLUMN IS {column}")
+            # print(board.shape)
             if (board[row][column] == board[row][column - 1] ==\
                 board[row][column - 2] == board[row][column - 3] == player):
                     return True
@@ -241,6 +244,12 @@ def get_valid_positions(board: np.ndarray) -> np.array:
     
     empty_cells = np.argwhere(board == NO_PLAYER)
     return np.unique(np.array([i[1] for i in empty_cells]))
+
+def vectorise_possible_moves(valid_positions: np.array) -> np.array:
+    out = np.zeros(7, dtype=int)
+    out = [1 if ind in valid_positions else 0 for ind, _ in enumerate(out)]
+
+    return out
 
 
 class MoveStatus(Enum):
