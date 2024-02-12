@@ -41,9 +41,9 @@ class Node:
         def UCT_value(node):
             #print(node.parentNode.visits)
             if node.visits == 0:# was float()""inf
-                return 0 + node.prior * c * sqrt(node.parentNode.visits) / (node.visits+1)
+                return float("inf")#0 + node.prior * c * sqrt(node.parentNode.visits) / (node.visits+1)
             else:
-                return (node.wins / node.visits) + node.prior * c * sqrt(node.parentNode.visits) / (node.visits+1)  # + 1e-6
+                return (node.wins / node.visits) + node.prior * c * sqrt(log(node.parentNode.visits) / node.visits)  # + 1e-6
 
         s = sorted(self.childNodes, key = lambda node: UCT_value(node))[-1]
         return s
@@ -95,6 +95,8 @@ def give_results(winning_player: BoardPiece, our_player: BoardPiece) -> int:
 
     elif winning_player == 3 - our_player:
         return -1 
+    else:
+        return 0
 
 
 def UCT(rootstate, player, num_iterations, model):
@@ -134,6 +136,7 @@ def UCT(rootstate, player, num_iterations, model):
             node = node.UCT_select_child()
                 
         #print("Expansion")
+    
         # expansion criterion -> go to expansion before selecting the next moves 
         parent_board_copy = deepcopy(node.board_state)
         current_player = node.player
@@ -141,13 +144,20 @@ def UCT(rootstate, player, num_iterations, model):
             action_probs, value = model.predict(node.board_state)
             valid_moves = vectorise_possible_moves(node.untriedMoves)
             action_probs = action_probs * valid_moves  # mask invalid moves
-            action_probs /= np.sum(action_probs)
+            # print((action_probs))
+            if np.sum(action_probs) != 0.:
+                action_probs /= np.sum(action_probs)
+            
             for move, prob in enumerate(action_probs):
-                if prob != 0:
+                # print(prob!=0.)
+                if prob != 0.:
+                    parent_board_copy = deepcopy(node.board_state)
                     apply_player_action(parent_board_copy, move, current_player)
                     child = Node(parent_board_copy, switch_player(current_player), move, node, prob)
                     node.add_child(child, move)
-        #node.expand(next_state, parent.to_play * -1, action_probs)
+        elif check_end_state(parent_board_copy, current_player) is GameState.IS_WIN:
+            value = 1
+            # _, value = model.predict(node.board_state)
 
 
         # while (len(node.untriedMoves) and node.visits != 0):
@@ -180,7 +190,7 @@ def UCT(rootstate, player, num_iterations, model):
             node = node.parentNode
 
     # print(rootstate.childNodes)
-    return sorted(rootstate.childNodes, key = lambda node: node.wins / (node.visits + 1))[-1].move, rootstate
+    return sorted(rootstate.childNodes, key = lambda node: node.wins / (node.visits ))[-1].move, rootstate
 
 def mcts_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]):
     # TODO: where to create a network so it will train and will not be re-intiialised every time?
@@ -189,12 +199,12 @@ def mcts_move(board: np.ndarray, player: BoardPiece, saved_state: Optional[Saved
     in_dim = np.prod(board.shape)
     out_dim = 7
 
-    model = CNN(in_dim, out_dim)
+    model = MLP(in_dim, out_dim)
     #model.load_state_dict(torch.load("/home/galan/Desktop/programming_project_bccn/agents/agent_mcts_nn/models/2024-02-11_18-28-59.pt"))
-    checkpoint = torch.load("/home/galan/Desktop/programming_project_bccn/agents/agent_mcts_nn/models/2024-02-11_21-12-48.pt", map_location='cpu')
+    checkpoint = torch.load("/home/galan/Desktop/programming_project_bccn/agents/agent_mcts_nn/models/2024-02-12_07-31-55.pt", map_location='cpu')
     model.load_state_dict(checkpoint) # checkpoint["state_dict"]
 
-    out, _ = UCT(rootstate = board, player = player, num_iterations = 256, model = model)
+    out, _ = UCT(rootstate = board, player = player, num_iterations = 1000, model = model)
 
     return out, saved_state
 

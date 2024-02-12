@@ -40,7 +40,8 @@ class Trainer:
                 action_probs[m] = v
 
             action_probs = action_probs * vectorise_possible_moves(get_valid_positions(state))
-            action_probs = action_probs / np.sum(action_probs)
+            if np.sum(action_probs):
+                action_probs = action_probs / np.sum(action_probs)
             train_examples.append((state, current_player, action_probs))
 
             # check validity of the move
@@ -79,7 +80,7 @@ class Trainer:
 
 
     def train(self, examples):
-        #optimizer = optim.NAdam(self.model.parameters(), lr=0.001)
+        # optimizer = optim.NAdam(self.model.parameters(), lr=0.001)
         optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
         pi_losses = []
         v_losses = []
@@ -157,16 +158,16 @@ class Trainer:
 
 if __name__ == '__main__':
     args = {
-    'batch_size': 16,
-    'numIters': 10, # 500,                                # Total number of training iterations
-    'num_simulations': 256,                         # Total number of MCTS simulations to run when deciding on a move to play
+    'batch_size': 32,
+    'numIters': 50, # 500,                                # Total number of training iterations
+    'num_simulations': 1000,#1000,                         # Total number of MCTS simulations to run when deciding on a move to play
     #'numEps': 100,                                  # Number of full games (episodes) to run during each iteration
     'epochs': 1000,                                    # Number of epochs of training per iteration
     'checkpoint_path': "/home/galan/Desktop/programming_project_bccn/agents/agent_mcts_nn/models"   # location to save latest set of weights
     }
 
 
-    model = CNN(6*7, 7)
+    model = MLP(6*7, 7)
     trainer = Trainer(model, args)
     trainer.learn()
 

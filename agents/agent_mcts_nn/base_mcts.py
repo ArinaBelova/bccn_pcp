@@ -158,7 +158,7 @@ def UCT(rootstate, player, saved_state, num_iterations):
             #print(f"I'm doing update of node with move {node.move} and player {node.player} with visits {node.visits} and wins {node.wins}")
             node.update(reward)
             #print(f"I did update of node with move {node.move} and player {node.player} with visits {node.visits} and wins {node.wins}")
-            reward = reward * (-1) # change reward as we will change the prespective player-wise
+            reward = reward # * (-1) # change reward as we will change the prespective player-wise
             node = node.parentNode
 
     # print(rootstate.childNodes)
@@ -175,7 +175,6 @@ def mcts_basic_move(board: np.ndarray, player: BoardPiece, saved_state: Optional
     # TODO: where to create a network so it will train and will not be re-intiialised every time?
     # SOmehow gve it a trained newotk -> load here saved weights from outside
     # Don't change the network while playing with human opponent, all the trianing is not the responsbilty of this funciton
-
     out, _ = UCT(rootstate = board, player = player, saved_state = saved_state, num_iterations = 1000)
     return out, saved_state
 
